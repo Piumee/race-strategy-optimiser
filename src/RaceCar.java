@@ -1,4 +1,5 @@
 import aerodynamic.AerodynamicKit;
+import engine.ElectricEngine;
 import engine.Engine;
 import tyre.Tyre;
 
@@ -7,7 +8,7 @@ public class RaceCar {
     public Engine engine;
     public Tyre tyre;
     public AerodynamicKit aeroKit;
-    private double fuelTankCapacity;
+    private double fuelTankCapacity; // or battery capacity (if electric)
 
     public RaceCar(Engine engine, Tyre tyre, AerodynamicKit aeroKit, double fuelTankCapacity) {
         this.engine = engine;
@@ -30,12 +31,16 @@ public class RaceCar {
         return baseTime * tempPenalty * corneringModifier * brakeModifier;
     }
 
-    // 🔥 Improved logic: combine AeroKit's fuelEfficiency and Engine's consumption
-    public double calculateFuelEfficiency() {
-        double baseEfficiency = aeroKit.getFuelEfficiency();
-        double enginePenalty = engine.getFuelConsumption();
-        double weightPenalty = engine.getWeight() / 300.0;
-        return Math.max(1.0, baseEfficiency - enginePenalty - weightPenalty);
+    // 🔥 Improved logic: combine AeroKit's fuelEfficiency and Engine's consumption and added EnergyConsumption
+    public double calculateEfficiency() {
+        if (engine instanceof ElectricEngine ev) {
+            return 100.0 / ev.getEnergyConsumption(); // km per kWh
+        } else {
+            double baseEfficiency = aeroKit.getFuelEfficiency();
+            double enginePenalty = engine.getFuelConsumption();
+            double weightPenalty = engine.getWeight() / 300.0;
+            return Math.max(1.0, baseEfficiency - enginePenalty - weightPenalty); // km/l
+        }
     }
 
     public Engine getEngine() {

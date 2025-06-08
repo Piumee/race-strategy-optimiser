@@ -15,13 +15,13 @@ public class RaceStrategySimulator {
         System.out.println("\n=== Race Strategy Simulation ===");
 
         System.out.println("\n🚗 Selected Car Setup:");
-        System.out.println("- Engine: " + car.engine.getName());
-        System.out.println("- Tyres: " + car.tyre.getType());
-        System.out.println("- Aero Kit: " + car.aeroKit.getName());
-        System.out.printf("- Fuel Tank: %.1fL\n", car.getFuelTankCapacity());
+        System.out.println("Engine: " + car.engine.getName());
+        System.out.println("Tyres: " + car.tyre.getType());
+        System.out.println("Aero Kit: " + car.aeroKit.getName());
+        System.out.printf("Fuel/Battery Capacity: %.1fL\n", car.getFuelTankCapacity());
 
 
-        double fuelEfficiency = car.calculateFuelEfficiency();
+        double fuelEfficiency = car.calculateEfficiency();
         double fuelNeeded = track.getTotalDistanceKm() / fuelEfficiency;
         int fuelStops = (int) Math.ceil(fuelNeeded / car.getFuelTankCapacity());
 
@@ -34,10 +34,25 @@ public class RaceStrategySimulator {
 
         System.out.printf("Estimated Lap Time: %.2f minutes\n", lapTime * 60);
         System.out.printf("Estimated Total Race Time: %.2f minutes\n", totalRaceTime * 60);
-        System.out.printf("Fuel Efficiency: %.2f km/l\n", fuelEfficiency);
-        System.out.printf("Estimated Fuel Needed: %.2f L\n", fuelNeeded);
-        System.out.printf("Fuel Stops Required: %d\n", fuelStops);
         System.out.printf("Tyre Changes Estimated: %d\n", tyreChanges);
+
+        // NEW: electric-specific simulation
+        if (car.getEngine() instanceof ElectricEngine) {
+            ElectricEngine ev = (ElectricEngine) car.getEngine();
+            double energyPer100Km = ev.getEnergyConsumption();
+            double totalEnergy = (track.getTotalDistanceKm() / 100.0) * energyPer100Km;
+
+            System.out.printf("Energy Consumption: %.2f kWh/100km\n", energyPer100Km);
+            System.out.printf("Estimated Energy Needed: %.2f kWh\n", totalEnergy);
+
+            double batteryCapacity = car.getFuelTankCapacity(); // Reuse fuelTankCapacity as batteryCapacity
+            int chargingStops = (int) Math.ceil(totalEnergy / batteryCapacity);
+            System.out.printf("🔌 Charging Stops Required: %d\n", chargingStops);
+        } else {
+            System.out.printf("Fuel Efficiency: %.2f km/l\n", fuelEfficiency);
+            System.out.printf("Estimated Fuel Needed: %.2f L\n", fuelNeeded);
+            System.out.printf("Fuel Stops Required: %d\n", fuelStops);
+        }
 
         // 🧠 Final Strategy Recommendation
         System.out.println("\n🧠 Final Strategy Recommendation:");
@@ -50,7 +65,9 @@ public class RaceStrategySimulator {
         boolean tyreTempMismatch = !car.getTyre().isTemperatureOptimal(track.getTemperatureC());
 
         boolean tyreTooSoftForCorners = highWearTrack && car.getTyre().getWearRate() > 0.12;
-        boolean fuelTooLow = fuelDemandingTrack && fuelEfficiency < 6.0;
+        //boolean fuelTooLow = fuelDemandingTrack && fuelEfficiency < 6.0;
+        // CHANGED: fuelTooLow condition should ignore EVs
+        boolean fuelTooLow = fuelDemandingTrack && !(car.getEngine() instanceof ElectricEngine) && fuelEfficiency < 6.0;
 
         boolean brakesTooWeakInWet = track.isWet() && car.getAeroKit().getBrakeEfficiency() < 0.6;
         boolean turboInWet = track.isWet() && car.getEngine().getName().toLowerCase().contains("turbo");
@@ -63,10 +80,6 @@ public class RaceStrategySimulator {
         boolean fuelChanged = Math.abs(car.getFuelTankCapacity() - optimalCar.getFuelTankCapacity()) > 5;
 
 
-//        boolean isSameSetup = car.engine.getClass().equals(optimalCar.engine.getClass())
-//                && car.tyre.getClass().equals(optimalCar.tyre.getClass())
-//                && car.aeroKit.getClass().equals(optimalCar.aeroKit.getClass())
-//                && Math.abs(car.getFuelTankCapacity() - optimalCar.getFuelTankCapacity()) <= 5;
 
         if (tyreTempMismatch && tyreChanged) {
             System.out.println("- Tyres do not match track temperature range. Consider changing compound.");

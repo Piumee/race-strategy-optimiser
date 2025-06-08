@@ -91,6 +91,10 @@ public class Main {
             default -> new StandardEngine();
         };
 
+        if (engineChoice == 5) {
+            System.out.println("⚡ Note: Electric Engine uses energy consumption instead of fuel. Capacity used only for simulation.");
+        }
+
         System.out.println("\nSelect Tyre:");
         System.out.println("[1] Soft\n[2] Medium\n[3] Hard");
         int tyreChoice = getChoice(scanner, "Enter tyre number: ", 1, 3);
@@ -115,19 +119,30 @@ public class Main {
         };
 
         System.out.print("\nEnter Fuel Tank Capacity (60–100 liters): ");
-        double tankCapacity;
+        double tank;
         try {
-            tankCapacity = Double.parseDouble(scanner.nextLine());
-            if (tankCapacity < 30 || tankCapacity > 150) {
-                System.out.println("⚠️ Invalid capacity. Using default: 70L");
-                tankCapacity = 70.0;
+            if (engine instanceof ElectricEngine) {
+                System.out.print("Enter Battery Capacity (40–100 kWh): ");
+                tank = scanner.nextDouble();
+                if (tank < 40 || tank > 100) {
+                    System.out.println("⚠️ Invalid battery capacity. Using default: 70 kWh");
+                    tank = 70;
+                }
+            } else {
+                System.out.print("Enter Fuel Tank Capacity (50–100 liters): ");
+                tank = scanner.nextDouble();
+                if (tank < 50 || tank > 100) {
+                    System.out.println("⚠️ Invalid fuel capacity. Using default: 70L");
+                    tank = 70;
+                }
             }
+
         } catch (Exception e) {
-            System.out.println("⚠️ Invalid input. Using default: 70L");
-            tankCapacity = 70.0;
+            System.out.println("⚠️ Invalid input. Using default: 70");
+            tank = 70.0;
         }
 
-        return new RaceCar(engine, tyre, aero, tankCapacity);
+        return new RaceCar(engine, tyre, aero, tank);
     }
 
     private static int getChoice(Scanner scanner, String prompt, int min, int max) {

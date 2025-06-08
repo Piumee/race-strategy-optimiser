@@ -1,6 +1,6 @@
 # 🏎️ Race Strategy Optimiser — Java Simulator
 
-An intelligent, modular Java application that simulates race strategies across multiple predefined tracks by allowing full or preset car customisation. The system evaluates performance metrics, matches configurations to track demands, and issues professional-grade recommendations, similar to what you'd expect in racing games like **Need for Speed** or **F1 Simulator**.
+An intelligent, modular Java application that simulates race strategies across multiple predefined tracks by allowing full or preset car customisation. The system evaluates performance metrics, matches configurations to track demands, and issues professional-grade recommendations.
 
 ---
 

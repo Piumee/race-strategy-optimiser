@@ -1,6 +1,10 @@
 import aerodynamic.*;
 import engine.*;
 import tyre.*;
+import components.SuspensionSetup;
+import components.BrakeCompound;
+import components.GearboxRatio;
+import components.TractionControlLevel;
 import java.util.List;
 import java.util.Scanner;
 
@@ -18,7 +22,6 @@ public class Main {
             for (int i = 0; i < tracks.size(); i++) {
                 System.out.printf("[%d] %s\n", i + 1, tracks.get(i).getName());
             }
-
             int trackChoice = getChoice(scanner, "Enter track number: ", 1, tracks.size());
             RaceTrack selectedTrack = tracks.get(trackChoice - 1);
             System.out.printf("Selected: %s (Difficulty: %d/10)\n",
@@ -48,7 +51,6 @@ public class Main {
                 break;
             }
         }
-
         scanner.close();
     }
 
@@ -58,32 +60,34 @@ public class Main {
         System.out.println("[2] Use Preset Profile");
         int modeChoice = getChoice(scanner, "Select option: ", 1, 2);
 
-        //predefine cars
+        // Preset Profile
         if (modeChoice == 2) {
-            RaceCar recommendedCar = RaceStrategySimulator.getRecommendedSetup(selectedTrack); // selectedTrack must be in scope
+            RaceCar recommended = RaceStrategySimulator.getRecommendedSetup(selectedTrack);
             System.out.println("\n🏎️ Recommended Setup for " + selectedTrack.getName() + ":");
-            System.out.println("- Engine: " + recommendedCar.engine.getName());
-            System.out.println("- Tyres: " + recommendedCar.tyre.getType());
-            System.out.println("- Aero Kit: " + recommendedCar.aeroKit.getName());
-            System.out.println("- Fuel Tank: " + recommendedCar.getFuelTankCapacity() + "L");
+            System.out.println("- Engine: " + recommended.getEngine().getName());
+            System.out.println("- Tyres: " + recommended.getTyre().getType());
+            System.out.println("- Aero Kit: " + recommended.getAeroKit().getName());
+            System.out.println("- Fuel Tank: " + recommended.getFuelTankCapacity() + " L");
+            System.out.println("- Suspension: " + recommended.getSuspension());
+            System.out.println("- Brakes: " + recommended.getBrakes());
+            System.out.println("- Gearbox: " + recommended.getGearbox());
+            System.out.println("- Traction Control: " + recommended.getTractionControl());
 
             System.out.println("💡 Why this setup? " + RaceStrategySimulator.explainSetupChoice(selectedTrack));
             System.out.print("\nWould you like to use this setup? (yes/no): ");
             String confirm = scanner.nextLine().trim().toLowerCase();
-
             if (confirm.equals("yes")) {
-                return recommendedCar;
+                return recommended;
             } else {
-                return buildRaceCar(scanner,selectedTrack); //  go back and re-prompt
+                return buildRaceCar(scanner, selectedTrack);
             }
         }
 
-        // Manual Configuration Flow
+        // Manual Configuration
         System.out.println("\nSelect Engine:");
         System.out.println("[1] Standard\n[2] Turbo\n[3] Hybrid\n[4] V8\n[5] Electric");
         int engineChoice = getChoice(scanner, "Enter engine number: ", 1, 5);
         Engine engine = switch (engineChoice) {
-            case 1 -> new StandardEngine();
             case 2 -> new TurboEngine();
             case 3 -> new HybridEngine();
             case 4 -> new V8Engine();
@@ -105,7 +109,6 @@ public class Main {
         System.out.println("[1] Standard\n[2] Downforce\n[3] Low Drag\n[4] Ground Effect\n[5] Wet Weather\n[6] Extreme");
         int aeroChoice = getChoice(scanner, "Enter kit number: ", 1, 6);
         AerodynamicKit aero = switch (aeroChoice) {
-            case 1 -> new StandardKit();
             case 2 -> new DownforceKit();
             case 3 -> new LowDragKit();
             case 4 -> new GroundEffectKit();
@@ -114,33 +117,66 @@ public class Main {
             default -> new StandardKit();
         };
 
-        System.out.print("\nEnter Fuel Tank Capacity (60–100 liters): ");
+        System.out.print("\nEnter Fuel Tank Capacity (30–150 L): ");
         double tankCapacity;
         try {
             tankCapacity = Double.parseDouble(scanner.nextLine());
             if (tankCapacity < 30 || tankCapacity > 150) {
-                System.out.println("⚠️ Invalid capacity. Using default: 70L");
+                System.out.println("⚠️ Invalid capacity. Using default: 70 L");
                 tankCapacity = 70.0;
             }
         } catch (Exception e) {
-            System.out.println("⚠️ Invalid input. Using default: 70L");
+            System.out.println("⚠️ Invalid input. Using default: 70 L");
             tankCapacity = 70.0;
         }
 
-        return new RaceCar(engine, tyre, aero, tankCapacity);
+        System.out.println("\nSelect Suspension Setup:");
+        SuspensionSetup suspension = selectOption(scanner, SuspensionSetup.values());
+
+        System.out.println("\nSelect Brake Compound:");
+        BrakeCompound brakes = selectOption(scanner, BrakeCompound.values());
+
+        System.out.println("\nSelect Gearbox Ratio:");
+        GearboxRatio gearbox = selectOption(scanner, GearboxRatio.values());
+
+        System.out.println("\nSelect Traction Control Level:");
+        TractionControlLevel tc = selectOption(scanner, TractionControlLevel.values());
+
+        return new RaceCar(
+                engine,
+                tyre,
+                aero,
+                tankCapacity,
+                suspension,
+                brakes,
+                gearbox,
+                tc
+        );
     }
 
+    // Generic choice helper
     private static int getChoice(Scanner scanner, String prompt, int min, int max) {
         int choice;
         while (true) {
             System.out.print(prompt);
             try {
                 choice = Integer.parseInt(scanner.nextLine());
-                if (choice >= min && choice <= max) return choice;
+                if (choice >= min && choice <= max) {
+                    return choice;
+                }
                 System.out.printf("Please enter a number between %d and %d.\n", min, max);
             } catch (Exception e) {
                 System.out.println("Invalid input. Please enter a number.");
             }
         }
+    }
+
+    // Generic enum selection helper
+    private static <E extends Enum<E>> E selectOption(Scanner scanner, E[] options) {
+        for (int i = 0; i < options.length; i++) {
+            System.out.printf("[%d] %s\n", i + 1, options[i]);
+        }
+        int choice = getChoice(scanner, "Enter option: ", 1, options.length);
+        return options[choice - 1];
     }
 }

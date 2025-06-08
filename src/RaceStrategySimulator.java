@@ -1,6 +1,10 @@
 import aerodynamic.*;
 import engine.*;
 import tyre.*;
+import components.SuspensionSetup;
+import components.BrakeCompound;
+import components.GearboxRatio;
+import components.TractionControlLevel;
 
 public class RaceStrategySimulator {
     private final RaceCar car;
@@ -14,163 +18,93 @@ public class RaceStrategySimulator {
     public void simulateRace() {
         System.out.println("\n=== Race Strategy Simulation ===");
 
+        // 1️⃣ Selected Car Setup
         System.out.println("\n🚗 Selected Car Setup:");
-        System.out.println("- Engine: " + car.engine.getName());
-        System.out.println("- Tyres: " + car.tyre.getType());
-        System.out.println("- Aero Kit: " + car.aeroKit.getName());
-        System.out.printf("- Fuel Tank: %.1fL\n", car.getFuelTankCapacity());
+        System.out.println("- Engine:             " + car.getEngine().getName());
+        System.out.println("- Tyres:              " + car.getTyre().getType());
+        System.out.println("- Aero Kit:           " + car.getAeroKit().getName());
+        System.out.printf("- Fuel Tank:          %.1f L\n", car.getFuelTankCapacity());
+        System.out.println("- Suspension:         " + car.getSuspension());
+        System.out.println("- Brake Compound:     " + car.getBrakes());
+        System.out.println("- Gearbox Ratio:      " + car.getGearbox());
+        System.out.println("- Traction Control:   " + car.getTractionControl());
 
-
+        // 2️⃣ Basic Race Metrics
         double fuelEfficiency = car.calculateFuelEfficiency();
-        double fuelNeeded = track.getTotalDistanceKm() / fuelEfficiency;
-        int fuelStops = (int) Math.ceil(fuelNeeded / car.getFuelTankCapacity());
+        double totalDistance  = track.getTotalDistanceKm();
+        double fuelNeeded     = totalDistance / fuelEfficiency;
+        int    fuelStops      = (int) Math.ceil(fuelNeeded / car.getFuelTankCapacity());
 
-        double lapTime = car.calculateLapTime(track.getTrackLengthKm(), track.getTemperatureC());
-        int totalLaps = (int) (track.getTotalDistanceKm() / track.getTrackLengthKm());
-        double totalRaceTime = lapTime * totalLaps;
+        double lapLength      = track.getTrackLengthKm();
+        double lapTime        = car.calculateLapTime(lapLength, track.getTemperatureC());
+        int    totalLaps      = (int)(totalDistance / lapLength);
+        double totalRaceTime  = lapTime * totalLaps;
 
-        double tyreWearPerLap = car.getTyre().getWearRate();
-        int tyreChanges = (int) (totalLaps * tyreWearPerLap);
+        double wearRate       = car.getTyre().getWearRate();
+        int    tyreChanges    = (int)(totalLaps * wearRate);
 
-        System.out.printf("Estimated Lap Time: %.2f minutes\n", lapTime * 60);
+        System.out.printf("\nEstimated Lap Time:        %.2f minutes\n", lapTime * 60);
         System.out.printf("Estimated Total Race Time: %.2f minutes\n", totalRaceTime * 60);
-        System.out.printf("Fuel Efficiency: %.2f km/l\n", fuelEfficiency);
-        System.out.printf("Estimated Fuel Needed: %.2f L\n", fuelNeeded);
-        System.out.printf("Fuel Stops Required: %d\n", fuelStops);
-        System.out.printf("Tyre Changes Estimated: %d\n", tyreChanges);
+        System.out.printf("Fuel Efficiency:           %.2f km/l\n", fuelEfficiency);
+        System.out.printf("Estimated Fuel Needed:     %.2f L\n", fuelNeeded);
+        System.out.printf("Fuel Stops Required:       %d\n", fuelStops);
+        System.out.printf("Tyre Changes Estimated:    %d\n", tyreChanges);
 
-        // 🧠 Final Strategy Recommendation
-        System.out.println("\n🧠 Final Strategy Recommendation:");
-        boolean hasRecommendation = false;
+        // 3️⃣ Compare to Optimal Setup
+        RaceCar optimal = getRecommendedSetup(track);
+        boolean engineChanged = !car.getEngine().getClass().equals(optimal.getEngine().getClass());
+        boolean tyreChanged   = !car.getTyre().getClass().equals(optimal.getTyre().getClass());
+        boolean aeroChanged   = !car.getAeroKit().getClass().equals(optimal.getAeroKit().getClass());
+        boolean fuelChanged   = Math.abs(car.getFuelTankCapacity() - optimal.getFuelTankCapacity()) > 1e-6;
+        boolean suspChanged   = !car.getSuspension().equals(optimal.getSuspension());
+        boolean brakeChanged  = !car.getBrakes().equals(optimal.getBrakes());
+        boolean gearChanged   = !car.getGearbox().equals(optimal.getGearbox());
+        boolean tcChanged     = !car.getTractionControl().equals(optimal.getTractionControl());
 
-       // Dynamic thresholds based on track type
-        boolean highWearTrack = track.getNumberOfCurves() > 10 || track.getNumberOfChicanes() > 3;
-        boolean fuelDemandingTrack = track.getTotalDistanceKm() > 160 || track.getElevationGain() > 100;
-
-        boolean tyreTempMismatch = !car.getTyre().isTemperatureOptimal(track.getTemperatureC());
-
-        boolean tyreTooSoftForCorners = highWearTrack && car.getTyre().getWearRate() > 0.12;
-        boolean fuelTooLow = fuelDemandingTrack && fuelEfficiency < 6.0;
-
-        boolean brakesTooWeakInWet = track.isWet() && car.getAeroKit().getBrakeEfficiency() < 0.6;
-        boolean turboInWet = track.isWet() && car.getEngine().getName().toLowerCase().contains("turbo");
-
-        RaceCar optimalCar = getRecommendedSetup(track);
-
-        boolean engineChanged = !car.engine.getClass().equals(optimalCar.engine.getClass());
-        boolean tyreChanged = !car.tyre.getClass().equals(optimalCar.tyre.getClass());
-        boolean aeroChanged = !car.aeroKit.getClass().equals(optimalCar.aeroKit.getClass());
-        boolean fuelChanged = Math.abs(car.getFuelTankCapacity() - optimalCar.getFuelTankCapacity()) > 5;
-
-
-//        boolean isSameSetup = car.engine.getClass().equals(optimalCar.engine.getClass())
-//                && car.tyre.getClass().equals(optimalCar.tyre.getClass())
-//                && car.aeroKit.getClass().equals(optimalCar.aeroKit.getClass())
-//                && Math.abs(car.getFuelTankCapacity() - optimalCar.getFuelTankCapacity()) <= 5;
-
-        if (tyreTempMismatch && tyreChanged) {
-            System.out.println("- Tyres do not match track temperature range. Consider changing compound.");
-            hasRecommendation = true;
-        }
-        if (fuelTooLow && fuelChanged) {
-            System.out.println("- Fuel efficiency is low for this track. Consider optimizing aero or switching to hybrid/electric.");
-            hasRecommendation = true;
-        }
-        if (tyreTooSoftForCorners && tyreChanged) {
-            System.out.println("- Tyres may degrade quickly on this twisty circuit. Consider using harder compound.");
-            hasRecommendation = true;
-        }
-        if (brakesTooWeakInWet && aeroChanged) {
-            System.out.println("- Wet track and low brake efficiency may reduce control. Consider a Downforce Kit.");
-            hasRecommendation = true;
-        }
-        if (turboInWet && engineChanged) {
-            System.out.println("- Turbo engines may be unstable in wet conditions. Consider Hybrid or Electric.");
-            hasRecommendation = true;
-        }
-
-        boolean isSameSetup = !engineChanged && !tyreChanged && !aeroChanged && !fuelChanged;
-
-        // Warn if component is manually downgraded even if threshold not violated
-        if (!isSameSetup) {
+        if (engineChanged || tyreChanged || aeroChanged || fuelChanged
+                || suspChanged || brakeChanged || gearChanged || tcChanged) {
+            System.out.println("\n⚠️  Some choices differ from the optimal setup:");
             if (engineChanged) {
-                System.out.println("- ❗ Engine selection is suboptimal. Recommended: " + optimalCar.engine.getName());
-                hasRecommendation = true;
+                System.out.println("   • Engine:           Recommended → " + optimal.getEngine().getName());
             }
             if (tyreChanged) {
-                System.out.println("- ❗ Tyre type differs from the track-optimized compound. Recommended: " + optimalCar.tyre.getType());
-                hasRecommendation = true;
+                System.out.println("   • Tyres:            Recommended → " + optimal.getTyre().getType());
             }
             if (aeroChanged) {
-                System.out.println("- ❗ Aerodynamic kit choice may not provide the ideal performance. Recommended: " + optimalCar.aeroKit.getName());
-                hasRecommendation = true;
+                System.out.println("   • Aero Kit:         Recommended → " + optimal.getAeroKit().getName());
             }
             if (fuelChanged) {
-                System.out.printf("- ❗ Fuel tank capacity may not meet race distance demands. Recommended: %.1fL\n", optimalCar.getFuelTankCapacity());
-                hasRecommendation = true;
+                System.out.printf("   • Fuel Tank:        Recommended → %.1f L\n", optimal.getFuelTankCapacity());
             }
-        }
-
-        if (!hasRecommendation) {
-            if (isSameSetup) {
-                System.out.println("✅ Your setup perfectly matches the optimal configuration for this track.");
-            } else {
-                System.out.println("✅ Your current setup is well-suited for the track conditions.");
+            if (suspChanged) {
+                System.out.println("   • Suspension:       Recommended → " + optimal.getSuspension());
             }
-        }
-
-
-        // 🛠️ Recommended Setup for the selected Track (Synced with rules above)
-        System.out.println("\n🛠️ Recommended Setup for This Track:");
-
-        // ENGINE
-        String engineRec;
-        if (turboInWet) {
-            engineRec = "Hybrid Engine";
-        } else if (track.isWet()) {
-            engineRec = "Electric Engine";
-        } else if (track.getNumberOfCurves() > 12) {
-            engineRec = "Hybrid Engine";
-        } else if (track.hasLongStraights()) {
-            engineRec = "Turbo Engine";
+            if (brakeChanged) {
+                System.out.println("   • Brake Compound:   Recommended → " + optimal.getBrakes());
+            }
+            if (gearChanged) {
+                System.out.println("   • Gearbox Ratio:    Recommended → " + optimal.getGearbox());
+            }
+            if (tcChanged) {
+                System.out.println("   • Traction Control: Recommended → " + optimal.getTractionControl());
+            }
         } else {
-            engineRec = "Standard Engine";
+            System.out.println("\n✅ Your configuration matches the optimal setup for this track.");
         }
 
-        // TYRE
-        String tyreRec;
-        if (track.getTemperatureC() < 20) {
-            tyreRec = "Soft Tyres";
-        } else if (track.getTemperatureC() > 30 || tyreTooSoftForCorners) {
-            tyreRec = "Hard Tyres";
-        } else {
-            tyreRec = "Medium Tyres";
-        }
-
-        // AERO KIT
-        String aeroRec;
-        if (brakesTooWeakInWet) {
-            aeroRec = "Downforce Kit";
-        } else if (track.getNumberOfCurves() > 12) {
-            aeroRec = "Downforce Kit";
-        } else if (track.hasLongStraights()) {
-            aeroRec = "Low Drag Kit";
-        } else {
-            aeroRec = "Standard Kit";
-        }
-
-        System.out.println("- Engine: " + engineRec);
-        System.out.println("- Tyres: " + tyreRec);
-        System.out.println("- Aero Kit: " + aeroRec);
+        // 4️⃣ Final Optimal Setup Summary
+        System.out.println("\n🛠️  Optimal Setup for This Track:");
+        System.out.println(optimal);
     }
 
-
-    // pre recommended cars setups for tracks
+    /**
+     * Returns a recommended RaceCar built with sensible defaults for the given track.
+     */
     public static RaceCar getRecommendedSetup(RaceTrack track) {
-        // ENGINE
+        // Engine
         Engine engine;
         if (track.isWet() && track.getNumberOfCurves() > 10) {
-            engine = new ElectricEngine(); // electric for control in twisty wet
+            engine = new ElectricEngine();
         } else if (track.isWet() || track.getTrackLengthKm() < 3.5) {
             engine = new ElectricEngine();
         } else if (track.getNumberOfCurves() > 15) {
@@ -181,17 +115,17 @@ public class RaceStrategySimulator {
             engine = new StandardEngine();
         }
 
-        // TYRE
+        // Tyre
         Tyre tyre;
         if (track.getTemperatureC() < 20) {
             tyre = new SoftTyre();
         } else if (track.getTemperatureC() > 30 || track.getNumberOfCurves() > 10) {
-            tyre = new HardTyre(); // hot & high wear
+            tyre = new HardTyre();
         } else {
             tyre = new MediumTyre();
         }
 
-        // AERO
+        // Aero Kit
         AerodynamicKit aero;
         if (track.getNumberOfChicanes() > 3 || track.getNumberOfCurves() > 12) {
             aero = new DownforceKit();
@@ -201,25 +135,58 @@ public class RaceStrategySimulator {
             aero = new StandardKit();
         }
 
-        // FUEL
+        // Fuel Tank
         double fuelTank;
-        if (track.getTotalDistanceKm() > 180) {
+        double totalDistance = track.getTotalDistanceKm();
+        if (totalDistance > 180) {
             fuelTank = 100;
-        } else if (track.getTotalDistanceKm() > 150) {
+        } else if (totalDistance > 150) {
             fuelTank = 90;
-        } else if (track.getTotalDistanceKm() < 120) {
+        } else if (totalDistance < 120) {
             fuelTank = 70;
         } else {
             fuelTank = 80;
         }
 
-        return new RaceCar(engine, tyre, aero, fuelTank);
+        // Suspension
+        SuspensionSetup suspension = track.getDifficultyScore() <= 3
+                ? SuspensionSetup.HARD_SUSPENSION
+                : track.getDifficultyScore() <= 7
+                ? SuspensionSetup.MEDIUM_SUSPENSION
+                : SuspensionSetup.SOFT_SUSPENSION;
+
+        // Brakes
+        BrakeCompound brakes = track.isWet()
+                ? BrakeCompound.HIGH_TEMPERATURE
+                : BrakeCompound.MEDIUM_TEMPERATURE;
+
+        // Gearbox
+        GearboxRatio gearbox = track.hasLongStraights()
+                ? GearboxRatio.WIDE_RATIO
+                : GearboxRatio.CLOSE_RATIO;
+
+        // Traction Control
+        TractionControlLevel tc = track.isWet()
+                ? TractionControlLevel.TC_HIGH
+                : TractionControlLevel.TC_MEDIUM;
+
+        return new RaceCar(
+                engine,
+                tyre,
+                aero,
+                fuelTank,
+                suspension,
+                brakes,
+                gearbox,
+                tc
+        );
     }
 
-
+    /**
+     * Explains in human‐readable form why the preset was chosen.
+     */
     public static String explainSetupChoice(RaceTrack track) {
         String name = track.getName().toLowerCase();
-
         if (name.contains("desert")) {
             return "🔥 Turbo engine with hard tyres for heat endurance and low drag for long straights.";
         } else if (name.contains("mountain")) {
@@ -231,9 +198,6 @@ public class RaceStrategySimulator {
         } else if (name.contains("grand prix")) {
             return "🧠 Balanced setup. Medium tyres and extreme aero handle both fast and technical sections well.";
         }
-
         return "Balanced configuration for general racing conditions.";
     }
-
-
 }

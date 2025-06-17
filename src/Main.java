@@ -43,7 +43,8 @@ public class Main {
 
             // Step 5: Restart Prompt
             System.out.print("\nSimulate another race? (yes/no): ");
-            if (!scanner.nextLine().trim().equalsIgnoreCase("yes")) {
+            String again = scanner.nextLine().trim();
+            if (!again.equalsIgnoreCase("yes")) {
                 System.out.println("Thank you for using the Race Strategy Optimiser. Your car setup is finalized! 🏎️ Goodbye! 🏁");
                 break;
             }

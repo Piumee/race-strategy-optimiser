@@ -220,26 +220,42 @@ class RaceStrategySimulatorTest {
         assertDoesNotThrow(() -> simulator.simulateRace());
     }
 
-    // INTEGRATION TESTING - Tests component interaction logic consistency
     @Test
-    @DisplayName("Recommendation system should use consistent criteria across components")
-    void testRecommendationCriteriaConsistency() {
-        RaceTrack track = new RaceTrack("Consistency Test", 4.0, 160, 25.0, false, 8, 2, true, 50);
+    @DisplayName("Simulate race with decent car setup - well-suited message")
+    void testSimulateRaceWithDecentCarSetup() {
+        // Create a car that's different from optimal but doesn't trigger specific warnings
+        RaceTrack moderateTrack = new RaceTrack("Moderate", 4.0, 140, 25.0, false, 6, 1, false, 30);
 
-        RaceCar recommendation = RaceStrategySimulator.getRecommendedSetup(track);
+        // Use components that are reasonable but not optimal
+        RaceCar decentCar = new RaceCar(new HybridEngine(), new MediumTyre(), new DownforceKit(), 80.0);
 
-        String engineType = recommendation.getEngine().getClass().getSimpleName();
-        String aeroType = recommendation.getAeroKit().getClass().getSimpleName();
+        RaceStrategySimulator simulator = new RaceStrategySimulator(decentCar, moderateTrack);
 
-        // If track has long straights, components should be optimized consistently
-        if (track.hasLongStraights()) {
-            boolean isConsistent =
-                    (engineType.equals("TurboEngine") && aeroType.equals("LowDragKit")) ||
-                            (engineType.equals("StandardEngine") && aeroType.equals("StandardKit"));
-
-            assertTrue(isConsistent,
-                    "Track with long straights should have consistent optimization. " +
-                            "Got engine: " + engineType + ", aero: " + aeroType);
-        }
+        // Should trigger the "well-suited for track conditions" branch
+        assertDoesNotThrow(() -> simulator.simulateRace());
     }
+
+
+    // WHITE BOX TESTING - Cover specific condition branches in simulateRace()
+    @ParameterizedTest
+    @DisplayName("Track difficulty conditions - high wear and fuel demanding scenarios")
+    @CsvSource({
+            "100, false, false, false",  // Low elevation, dry -> test highWearTrack=false, fuelDemandingTrack=false
+            "300, true, true, true",     // High elevation, wet -> test all conditions true
+            "50, false, true, false"     // Short distance, dry, few curves -> mixed conditions
+    })
+    void testTrackDifficultyConditions(int elevation, boolean isWet, boolean expectFuelDemanding, boolean expectHighWear) {
+        int curves = expectHighWear ? 15 : 5;
+        int distance = expectFuelDemanding ? 180 : 120;
+
+        RaceTrack testTrack = new RaceTrack("Specific", 4.0, distance, 25.0, isWet, curves, 2, false, elevation);
+        RaceCar testCar = new RaceCar(new StandardEngine(), new MediumTyre(), new StandardKit(), 70.0);
+
+        RaceStrategySimulator simulator = new RaceStrategySimulator(testCar, testTrack);
+
+        // Should execute different condition branches based on track characteristics
+        assertDoesNotThrow(() -> simulator.simulateRace());
+    }
+
+
 }

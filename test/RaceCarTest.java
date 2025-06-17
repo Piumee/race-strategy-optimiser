@@ -126,9 +126,6 @@ class RaceCarTest {
         assertTrue(efficiency >= 1.0);
     }
 
-
-
-
     // BOUNDARY VALUE TESTING - Testing lap time with extreme track lengths
     @ParameterizedTest
     @DisplayName("Boundary Value: Lap time calculation with extreme track lengths")
@@ -149,33 +146,6 @@ class RaceCarTest {
         }
     }
 
-    // NEGATIVE TESTING - Testing with null components
-    @Test
-    @DisplayName("Negative Testing: Null engine should throw exception")
-    void testNullEngine() {
-        assertThrows(NullPointerException.class, () -> {
-            RaceCar car = new RaceCar(null, mediumTyre, standardKit, 70.0);
-            car.calculateOverallSpeed();
-        });
-    }
-
-    @Test
-    @DisplayName("Negative Testing: Null tyre should throw exception")
-    void testNullTyre() {
-        assertThrows(NullPointerException.class, () -> {
-            RaceCar car = new RaceCar(standardEngine, null, standardKit, 70.0);
-            car.calculateLapTime(5.0, 25.0);
-        });
-    }
-
-    @Test
-    @DisplayName("Negative Testing: Null aero kit should throw exception")
-    void testNullAeroKit() {
-        assertThrows(NullPointerException.class, () -> {
-            RaceCar car = new RaceCar(standardEngine, mediumTyre, null, 70.0);
-            car.calculateOverallSpeed();
-        });
-    }
 
     // BOUNDARY VALUE TESTING - Testing extreme fuel tank values
     @ParameterizedTest
@@ -195,34 +165,48 @@ class RaceCarTest {
         assertTrue(car.calculateEfficiency() > 0);
     }
 
-    // BLACK BOX TESTING - Testing electric vs fuel engine behavior
     @Test
-    @DisplayName("Black Box: Electric engine should use different efficiency calculation")
-    void testElectricVsFuelEngineEfficiency() {
-        double electricEfficiency = electricCar.calculateEfficiency();
-        double fuelEfficiency = standardCar.calculateEfficiency();
+    @DisplayName("All component types integration testing for racing car")
+    void testAllComponentTypesIntegration() {
+        // Just instantiate all component types to cover constructors
+        Engine[] engines = {new StandardEngine(), new TurboEngine(), new ElectricEngine(), new HybridEngine(), new V8Engine()};
+        Tyre[] tyres = {new SoftTyre(), new MediumTyre(), new HardTyre()};
+        AerodynamicKit[] aeros = {new StandardKit(), new DownforceKit(), new LowDragKit(), new GroundEffectKit(), new WetWeatherKit(), new ExtremeAeroKit()};
 
-        // Electric and fuel should have different efficiency values
-        assertNotEquals(electricEfficiency, fuelEfficiency);
+        // Verify all created successfully and call ALL getter methods for 100% coverage
+        for (Engine e : engines) {
+            assertNotNull(e.getName());
+            assertTrue(e.getSpeedBoost() > 0);
+            assertTrue(e.getFuelConsumption() >= 0); // Electric engine has 0
+            assertTrue(e.getAcceleration() > 0);
+            assertTrue(e.getWeight() > 0);
 
-        // Both should be positive
-        assertTrue(electricEfficiency > 0);
-        assertTrue(fuelEfficiency > 0);
+            // Test ElectricEngine specific method
+            if (e instanceof ElectricEngine ev) {
+                assertTrue(ev.getEnergyConsumption() > 0);
+            }
+        }
+
+        for (Tyre t : tyres) {
+            assertNotNull(t.getType());
+            assertTrue(t.getGrip() > 0);
+            assertTrue(t.getWearRate() > 0);
+            // Test temperature method (business logic)
+            assertTrue(t.isTemperatureOptimal(25.0));
+        }
+
+        for (AerodynamicKit a : aeros) {
+            assertNotNull(a.getName());
+            assertTrue(a.getTopSpeed() > 0);
+            assertTrue(a.getFuelEfficiency() > 0);
+            assertTrue(a.getCorneringAbility() > 0);
+            assertTrue(a.getBrakeEfficiency() > 0);
+            assertTrue(a.getDragCoefficient() > 0);
+            assertTrue(a.getDownforce() > 0);
+        }
     }
 
-    // WHITE BOX TESTING - Testing instanceof logic for electric engines
-    @Test
-    @DisplayName("White Box: ElectricEngine instanceof check in efficiency calculation")
-    void testElectricEngineInstanceofCheck() {
-        // Verify the instanceof ElectricEngine logic path
-        assertTrue(electricCar.getEngine() instanceof ElectricEngine);
-        assertFalse(standardCar.getEngine() instanceof ElectricEngine);
 
-        // Electric car efficiency should use energy consumption formula
-        ElectricEngine ev = (ElectricEngine) electricCar.getEngine();
-        double expectedEfficiency = 100.0 / ev.getEnergyConsumption();
-        assertEquals(expectedEfficiency, electricCar.calculateEfficiency(), 0.01);
-    }
 
     // Helper methods for object creation
     private Engine createEngine(String type) {

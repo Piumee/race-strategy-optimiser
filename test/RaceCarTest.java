@@ -13,6 +13,7 @@ import tyre.*;
  * Test class for RaceCar
  * Testing Types: Black Box, White Box, Boundary Value, Equivalence Partitioning
  */
+@DisplayName("Comprehensive RaceCar Class Tests")
 class RaceCarTest {
 
     private RaceCar standardCar;
@@ -32,7 +33,7 @@ class RaceCarTest {
 
     // BLACK BOX TESTING - Testing constructor and basic getters
     @Test
-    @DisplayName("Black Box: Constructor should set all components correctly")
+    @DisplayName("Constructor should set all components correctly")
     void testConstructorSetsComponents() {
         assertEquals(standardEngine, standardCar.getEngine());
         assertEquals(mediumTyre, standardCar.getTyre());
@@ -42,17 +43,17 @@ class RaceCarTest {
 
     // WHITE BOX TESTING - Testing calculateOverallSpeed algorithm
     @Test
-    @DisplayName("White Box: Overall speed calculation algorithm")
+    @DisplayName("Overall speed calculation algorithm")
     void testCalculateOverallSpeedAlgorithm() {
         // Formula: aeroKit.getTopSpeed() + engine.getSpeedBoost() - (engine.getWeight() / 100)
         // Standard Kit: topSpeed=250, Standard Engine: speedBoost=20, weight=180
         // Expected: 250 + 20 - (180/100) = 250 + 20 - 1.8 = 268.2
-
         double expectedSpeed = 250 + 20 - (180.0 / 100);
         assertEquals(expectedSpeed, standardCar.calculateOverallSpeed(), 0.01);
     }
+
     @ParameterizedTest
-    @DisplayName("White Box: Overall speed with different engine weights")
+    @DisplayName("Overall speed with different engine weights")
     @CsvSource({
             "StandardEngine, 180, 268.2",    // 250 + 20 - 1.8 = 268.2
             "TurboEngine, 220, 287.8",       // 250 + 40 - 2.2 = 287.8
@@ -69,7 +70,7 @@ class RaceCarTest {
 
     // WHITE BOX TESTING - Testing calculateLapTime algorithm with temperature conditions
     @ParameterizedTest
-    @DisplayName("White Box: Lap time calculation with temperature effects")
+    @DisplayName("Lap time calculation with temperature effects")
     @CsvSource({
             "25.0, true, 1.0",     // Optimal temperature (15-35 range for medium tyres)
             "10.0, false, 1.1",    // Below optimal range
@@ -87,7 +88,7 @@ class RaceCarTest {
 
     // WHITE BOX TESTING - Testing calculateEfficiency for electric vs fuel engines
     @Test
-    @DisplayName("White Box: Efficiency calculation for electric engine")
+    @DisplayName("Efficiency calculation for electric engine")
     void testElectricEngineEfficiency() {
         // Electric formula: 100.0 / ev.getEnergyConsumption()
         // ElectricEngine energy consumption = 18.0 kWh/100km
@@ -98,7 +99,7 @@ class RaceCarTest {
     }
 
     @Test
-    @DisplayName("White Box: Efficiency calculation for fuel engine")
+    @DisplayName("Efficiency calculation for fuel engine")
     void testFuelEngineEfficiency() {
         // Fuel formula: Math.max(1.0, baseEfficiency - enginePenalty - weightPenalty)
         // Standard Kit: fuelEfficiency=12, Standard Engine: consumption=4.5, weight=180
@@ -114,7 +115,7 @@ class RaceCarTest {
 
     // BOUNDARY VALUE TESTING - Testing efficiency minimum threshold
     @Test
-    @DisplayName("Boundary Value: Efficiency should not go below 1.0")
+    @DisplayName("Efficiency should not go below 1.0")
     void testEfficiencyMinimumThreshold() {
         // Create car with high consumption engine and poor aero to test Math.max(1.0, ...)
         Engine heavyEngine = new V8Engine(); // weight=250, consumption=7.0
@@ -128,7 +129,7 @@ class RaceCarTest {
 
     // BOUNDARY VALUE TESTING - Testing lap time with extreme track lengths
     @ParameterizedTest
-    @DisplayName("Boundary Value: Lap time calculation with extreme track lengths")
+    @DisplayName("Lap time calculation with extreme track lengths")
     @CsvSource({
             "0.1, 25.0",     // Very short track
             "1.0, 25.0",     // Short track
@@ -149,7 +150,7 @@ class RaceCarTest {
 
     // BOUNDARY VALUE TESTING - Testing extreme fuel tank values
     @ParameterizedTest
-    @DisplayName("Boundary Value: Extreme fuel tank capacities")
+    @DisplayName("Extreme fuel tank capacities")
     @CsvSource({
             "0.0",      // Zero capacity
             "0.1",      // Very small capacity

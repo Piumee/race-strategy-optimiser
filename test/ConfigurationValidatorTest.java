@@ -13,6 +13,7 @@ import tyre.*;
  * Test class for ConfigurationValidator
  * Testing Types: Black Box, White Box, Boundary Value, Equivalence Partitioning
  */
+@DisplayName("Comprehensive ConfigurationValidator Class Tests")
 class ConfigurationValidatorTest {
 
     private RaceTrack dryTrack;
@@ -28,7 +29,7 @@ class ConfigurationValidatorTest {
 
     // BLACK BOX TESTING - Testing based on specifications without knowing internal implementation
     @Test
-    @DisplayName("Black Box: Valid configuration should return true")
+    @DisplayName("Valid configuration should return true")
     void testValidConfiguration() {
         RaceCar validCar = new RaceCar(new StandardEngine(), new MediumTyre(), new StandardKit(), 70.0);
         assertTrue(ConfigurationValidator.isValid(validCar, dryTrack));
@@ -36,7 +37,7 @@ class ConfigurationValidatorTest {
 
     // BLACK BOX TESTING - Testing known invalid combination from requirements
     @Test
-    @DisplayName("Black Box: Invalid combination - Wet Weather Kit with Hard Tyres")
+    @DisplayName("Invalid combination - Wet Weather Kit with Hard Tyres")
     void testInvalidWetWeatherKitWithHardTyres() {
         RaceCar invalidCar = new RaceCar(new StandardEngine(), new HardTyre(), new WetWeatherKit(), 70.0);
         assertFalse(ConfigurationValidator.isValid(invalidCar, dryTrack));
@@ -44,7 +45,7 @@ class ConfigurationValidatorTest {
 
     // WHITE BOX TESTING - Testing internal logic paths and conditions
     @ParameterizedTest
-    @DisplayName("White Box: Warning conditions should return true but trigger warnings")
+    @DisplayName("Warning conditions should return true but trigger warnings")
     @CsvSource({
             "TurboEngine, SoftTyre, StandardKit, 9.0",      // Turbo + Soft on long track (>8km)
             "ElectricEngine, MediumTyre, ExtremeAeroKit, 5.0", // Electric + Extreme Aero
@@ -62,7 +63,7 @@ class ConfigurationValidatorTest {
 
     // WHITE BOX TESTING - Testing specific condition: Low Drag + Wet Track
     @Test
-    @DisplayName("White Box: Low Drag Kit on wet track warning condition")
+    @DisplayName("Low Drag Kit on wet track warning condition")
     void testLowDragKitOnWetTrack() {
         RaceCar car = new RaceCar(new StandardEngine(), new MediumTyre(), new LowDragKit(), 70.0);
         assertTrue(ConfigurationValidator.isValid(car, wetTrack));
@@ -70,7 +71,7 @@ class ConfigurationValidatorTest {
 
     // BOUNDARY VALUE TESTING - Testing edge cases and limits
     @ParameterizedTest
-    @DisplayName("Boundary Value: Track length boundary for Turbo + Soft warning (8km threshold)")
+    @DisplayName("Track length boundary for Turbo + Soft warning (8km threshold)")
     @CsvSource({
             "7.9, true",   // Just under 8km - no warning expected
             "8.0, true",   // Exactly 8km - warning expected
@@ -85,7 +86,7 @@ class ConfigurationValidatorTest {
 
     // BOUNDARY VALUE TESTING - Testing engine weight boundary (230kg threshold)
     @ParameterizedTest
-    @DisplayName("Boundary Value: Engine weight boundary for Ground Effect warning (230kg threshold)")
+    @DisplayName("Engine weight boundary for Ground Effect warning (230kg threshold)")
     @CsvSource({
             "HybridEngine, true",    // 200kg - under threshold
             "TurboEngine, true",     // 220kg - under threshold

@@ -9,7 +9,7 @@ import java.util.List;
  * Test class for TrackFactory - Minimal testing for simple factory method
  * Testing Types: Black Box, Boundary Value
  */
-@DisplayName("Track Factory - Essential Testing")
+@DisplayName("Track Factory - Testing for Predefine Tracks")
 class TrackFactoryTest {
 
     // BLACK BOX TESTING - Testing that all 5 preset tracks are created correctly

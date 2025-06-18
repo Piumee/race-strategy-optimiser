@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test class for RaceTrack
  * Testing Types: Black Box, White Box, Boundary Value, Equivalence Partitioning
  */
+@DisplayName("Comprehensive RaceTrack Class Tests")
 class RaceTrackTest {
 
     private RaceTrack basicTrack;
@@ -20,7 +21,7 @@ class RaceTrackTest {
 
     // BLACK BOX TESTING - Testing constructor and getter functionality
     @Test
-    @DisplayName("Black Box: Constructor should set all properties correctly")
+    @DisplayName("Constructor should set all properties correctly")
     void testConstructorSetsProperties() {
         assertEquals("Test Track", basicTrack.getName());
         assertEquals(4.0, basicTrack.getTrackLengthKm());
@@ -35,7 +36,7 @@ class RaceTrackTest {
 
     // WHITE BOX TESTING - Testing internal difficulty calculation algorithm
     @ParameterizedTest
-    @DisplayName("White Box: Difficulty score calculation algorithm")
+    @DisplayName("Difficulty score calculation algorithm test")
     @CsvSource({
             "0, 0, 0, false, 0",     // Minimum difficulty (all components = 0)
             "225, 15, 5, true, 10",  // Maximum difficulty (should cap at 10)
@@ -50,7 +51,7 @@ class RaceTrackTest {
 
     // WHITE BOX TESTING - Testing individual components of difficulty algorithm
     @Test
-    @DisplayName("White Box: Individual difficulty components calculation")
+    @DisplayName("Individual difficulty components calculation")
     void testDifficultyAlgorithmComponents() {
         // Test elevation component: score += Math.min(3, elevationGain / 75)
         RaceTrack elevationTrack = new RaceTrack("Elevation", 4.0, 160, 25.0, false, 0, 0, false, 150);
@@ -73,7 +74,7 @@ class RaceTrackTest {
 
     // BOUNDARY VALUE TESTING - Testing difficulty score cap at 10
     @Test
-    @DisplayName("Boundary Value: Maximum difficulty score should cap at 10")
+    @DisplayName("Maximum difficulty score should cap at 10")
     void testMaximumDifficultyScoreCap() {
         // Create track that would exceed 10 without cap: elevation(3) + curves(3) + chicanes(1) + wet(2) = 9
         // Adding more should still cap at 10
@@ -112,6 +113,7 @@ class RaceTrackTest {
         RaceTrack track = new RaceTrack("Temp Test", 4.0, 160, temperature, false, 5, 1, false, 50);
         assertEquals(temperature, track.getTemperatureC());
     }
+
 
     // NEGATIVE TESTING - Testing with unusual or edge case inputs
     @Test
